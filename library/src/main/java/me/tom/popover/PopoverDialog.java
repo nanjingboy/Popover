@@ -26,9 +26,6 @@ public class PopoverDialog {
 
     public PopoverDialog(Context context) {
         mContext = context;
-        mAlertDialog = new AlertDialog.Builder(context, R.style.PopoverDialog).create();
-        mAlertDialog.setCancelable(true);
-        mAlertDialog.setCanceledOnTouchOutside(false);
     }
 
     public void show(View anchor, View contentView, Size popoverSize, HorizontalMargin popoverMargin) {
@@ -142,6 +139,10 @@ public class PopoverDialog {
             contentViewParams.width = popoverWidth;
         }
         container.addView(contentView, contentViewParams);
+
+        mAlertDialog = new AlertDialog.Builder(mContext, R.style.PopoverDialog).create();
+        mAlertDialog.setCancelable(true);
+        mAlertDialog.setCanceledOnTouchOutside(false);
         mAlertDialog.setView(view);
         Window window = mAlertDialog.getWindow();
         if (window != null) {
@@ -153,10 +154,11 @@ public class PopoverDialog {
     public void dismiss() {
         if (isShowing()) {
             mAlertDialog.dismiss();
+            mAlertDialog = null;
         }
     }
 
     public boolean isShowing() {
-        return mAlertDialog.isShowing();
+        return mAlertDialog != null && mAlertDialog.isShowing();
     }
 }
