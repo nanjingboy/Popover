@@ -8,7 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import me.tom.popover.HorizontalMargin;
+import me.tom.popover.Margin;
 import me.tom.popover.PopoverDialog;
 import me.tom.popover.Size;
 
@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
                 anchor,
                 contentView,
                 new Size(100, 100),
-                new HorizontalMargin(0, 0),
+                new Margin(),
                 PopoverDialog.ScrollOrientation.HORIZONTAL
         );
     }
@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
                 anchor,
                 contentView,
                 new Size(100, 100),
-                new HorizontalMargin(0, 0),
+                new Margin(),
                 PopoverDialog.ScrollOrientation.VERTICAL
         );
     }

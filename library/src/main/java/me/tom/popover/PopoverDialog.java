@@ -28,18 +28,18 @@ public class PopoverDialog {
         mContext = context;
     }
 
-    public void show(View anchor, View contentView, Size popoverSize, HorizontalMargin popoverMargin) {
+    public void show(View anchor, View contentView, Size popoverSize, Margin popoverMargin) {
         show(anchor, contentView, popoverSize, popoverMargin, ScrollOrientation.HORIZONTAL);
     }
 
     public void show(View anchor, View contentView, Size popoverSize, ScrollOrientation orientation) {
-        show(anchor, contentView, popoverSize, new HorizontalMargin(0, 0), orientation);
+        show(anchor, contentView, popoverSize, new Margin(), orientation);
     }
 
     public void show(View anchor,
                      View contentView,
                      Size popoverSize,
-                     HorizontalMargin popoverMargin,
+                     Margin popoverMargin,
                      ScrollOrientation orientation) {
         if (isShowing()) {
             return;
@@ -47,6 +47,7 @@ public class PopoverDialog {
 
         if (mWindowSize == null) {
             mWindowSize = Utils.getWindowSize(mContext);
+            mWindowSize.height -= Utils.getStatusBarHeight(mContext);
         }
         if (mStatusBarHeight == 0) {
             mStatusBarHeight = Utils.getStatusBarHeight(mContext);
@@ -74,40 +75,40 @@ public class PopoverDialog {
             }
         });
 
-        int arrowTop;
-        int popoverTop;
-        ArrowView.ArrowOrientation arrowOrientation;
         int[] anchorLocation = new int[2];
         anchor.getLocationInWindow(anchorLocation);
-        int anchorTop = anchorLocation[1] - mStatusBarHeight;
-        int maxPopoverTop = anchorTop + anchor.getHeight() + popoverSize.height + mArrowSize;
-        if (maxPopoverTop > mWindowSize.height) {
-            arrowTop = anchorTop - mArrowSize;
+        Layout anchorLayout = new Layout();
+        anchorLayout.x = anchorLocation[0];
+        anchorLayout.y = anchorLocation[1];
+        anchorLayout.width = anchor.getWidth();
+        anchorLayout.height = anchor.getHeight();
+
+        ArrowView.ArrowOrientation arrowOrientation = parseArrowOrientation(
+                anchorLayout,
+                popoverSize,
+                popoverMargin
+        );
+        popoverSize = parsePopoverSize(arrowOrientation, anchorLayout, popoverSize, popoverMargin);
+
+        int arrowTop;
+        int popoverTop;
+        if (arrowOrientation == ArrowView.ArrowOrientation.DOWN) {
+            arrowTop = anchorLayout.y - mStatusBarHeight - mArrowSize;
             popoverTop = arrowTop - popoverSize.height;
-            arrowOrientation = ArrowView.ArrowOrientation.DOWN;
         } else {
-            arrowTop  = anchorTop + anchor.getHeight();
+            arrowTop = anchorLayout.y - mStatusBarHeight + anchorLayout.height;
             popoverTop = arrowTop + mArrowSize;
-            arrowOrientation = ArrowView.ArrowOrientation.UP;
         }
 
-        int popoverLeft;
-        int popoverWidth = popoverSize.width;
-        if (popoverWidth > mWindowSize.width) {
-            popoverLeft = 0;
-            popoverWidth = mWindowSize.width;
-        } else {
-            int maxPopoverLeft = mWindowSize.width - popoverWidth - popoverMargin.right;
-            popoverLeft = anchorLocation[0] + (anchor.getWidth() - popoverWidth) / 2;
-            if (popoverLeft < popoverMargin.left) {
-                popoverLeft = popoverMargin.left;
-            } else if (popoverLeft > maxPopoverLeft) {
-                popoverLeft = maxPopoverLeft;
-            }
+        int maxPopoverLeft = mWindowSize.width - popoverSize.width - popoverMargin.right;
+        int popoverLeft = anchorLayout.x + (anchorLayout.width - popoverSize.width) / 2;
+        if (popoverLeft < popoverMargin.left) {
+            popoverLeft = popoverMargin.left;
+        } else if (popoverLeft > maxPopoverLeft) {
+            popoverLeft = maxPopoverLeft;
         }
-
         int maxArrowLeft = popoverLeft + popoverSize.width - mArrowSize;
-        int arrowLeft = anchorLocation[0] + (anchor.getWidth() - mArrowSize) / 2;
+        int arrowLeft = anchorLayout.x + (anchorLayout.width - mArrowSize) / 2;
         if (arrowLeft < popoverLeft) {
             arrowLeft = popoverLeft;
         } else if (arrowLeft > maxArrowLeft) {
@@ -124,7 +125,7 @@ public class PopoverDialog {
         View scrollView = view.findViewById(R.id.scrollView);
         FrameLayout.LayoutParams scrollViewParams = (FrameLayout.LayoutParams) scrollView.getLayoutParams();
         scrollViewParams.height = popoverSize.height;
-        scrollViewParams.width = popoverWidth;
+        scrollViewParams.width = popoverSize.width;
         scrollViewParams.topMargin = popoverTop;
         scrollViewParams.leftMargin = popoverLeft;
         scrollView.setLayoutParams(scrollViewParams);
@@ -132,11 +133,11 @@ public class PopoverDialog {
         LinearLayout container = view.findViewById(R.id.container);
         ViewGroup.LayoutParams contentViewParams = contentView.getLayoutParams();
         if (contentViewParams == null) {
-            contentViewParams = new LinearLayout.LayoutParams(popoverWidth, popoverSize.height);
+            contentViewParams = new LinearLayout.LayoutParams(popoverSize.width, popoverSize.height);
         } else if (orientation == ScrollOrientation.HORIZONTAL) {
             contentViewParams.height = popoverSize.height;
         } else if (orientation == ScrollOrientation.VERTICAL) {
-            contentViewParams.width = popoverWidth;
+            contentViewParams.width = popoverSize.width;
         }
         container.addView(contentView, contentViewParams);
 
@@ -160,5 +161,50 @@ public class PopoverDialog {
 
     public boolean isShowing() {
         return mAlertDialog != null && mAlertDialog.isShowing();
+    }
+
+    private ArrowView.ArrowOrientation parseArrowOrientation(Layout anchorLayout,
+                                                             Size popoverSize,
+                                                             Margin popoverMargin) {
+        int maxPopoverTop = anchorLayout.y
+                            - mStatusBarHeight
+                            + anchorLayout.height
+                            + mArrowSize
+                            + popoverSize.height
+                            + popoverMargin.bottom;
+
+        if (maxPopoverTop > mWindowSize.height) {
+            int maxWindowSpace = mWindowSize.height - mStatusBarHeight - anchorLayout.y - anchorLayout.height;
+            return anchorLayout.y > maxWindowSpace ? ArrowView.ArrowOrientation.DOWN : ArrowView.ArrowOrientation.UP;
+
+        }
+        return ArrowView.ArrowOrientation.UP;
+    }
+
+    private Size parsePopoverSize(ArrowView.ArrowOrientation arrowOrientation,
+                                  Layout anchorLayout,
+                                  Size popoverSize,
+                                  Margin popoverMargin) {
+        int width = popoverSize.width;
+        int height = popoverSize.height;
+        int maxWidth = mWindowSize.width - popoverMargin.left - popoverMargin.right;
+        if (width <= 0 || width > maxWidth) {
+            width = maxWidth;
+        }
+        int maxHeight;
+        if (arrowOrientation == ArrowView.ArrowOrientation.DOWN) {
+            maxHeight = anchorLayout.y - popoverMargin.top - mArrowSize;
+        } else {
+            maxHeight = mWindowSize.height
+                        - mStatusBarHeight
+                        - anchorLayout.y
+                        - anchorLayout.height
+                        - mArrowSize
+                        - popoverMargin.bottom;
+        }
+        if (height >= maxHeight) {
+            height = maxHeight;
+        }
+        return new Size(width, height);
     }
 }
