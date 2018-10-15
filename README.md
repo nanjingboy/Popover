@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.nanjingboy:Popover:1.0.0'
+    implementation 'com.github.nanjingboy:Popover:1.0.1'
 }
 ```
 
@@ -24,9 +24,9 @@ dependencies {
 * [PopoverDialog](library/src/main/java/me/tom/popover/PopoverDialog.java)
 
 ```java
-public void show(View anchor, View contentView, Size popoverSize, HorizontalMargin popoverMargin);
+public void show(View anchor, View contentView, Size popoverSize, Margin popoverMargin);
 public void show(View anchor, View contentView, Size popoverSize, ScrollOrientation orientation);
-public void show(View anchor, View contentView, Size popoverSize, HorizontalMargin popoverMargin, ScrollOrientation orientation);
+public void show(View anchor, View contentView, Size popoverSize, Margin popoverMargin, ScrollOrientation orientation);
 public void dismiss();
 public boolean isShowing();
 ```
