@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.nanjingboy:Popover:1.0.1'
+    implementation 'com.github.nanjingboy:Popover:1.0.3'
 }
 ```
 
