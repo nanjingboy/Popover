@@ -47,7 +47,6 @@ public class PopoverDialog {
 
         if (mWindowSize == null) {
             mWindowSize = Utils.getWindowSize(mContext);
-            mWindowSize.height -= Utils.getStatusBarHeight(mContext);
         }
         if (mStatusBarHeight == 0) {
             mStatusBarHeight = Utils.getStatusBarHeight(mContext);
